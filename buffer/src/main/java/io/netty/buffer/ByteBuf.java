@@ -245,7 +245,6 @@ import java.nio.charset.UnsupportedCharsetException;
  * Please refer to {@link ByteBufInputStream} and
  * {@link ByteBufOutputStream}.
  */
-@SuppressWarnings("ClassMayBeInterface")
 public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
 
     /**
@@ -421,6 +420,15 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * {@code (this.maxCapacity - this.writerIndex)}.
      */
     public abstract int maxWritableBytes();
+
+    /**
+     * Returns the maximum number of bytes which can be written for certain without involving
+     * an internal reallocation or data-copy. The returned value will be &ge; {@link #writableBytes()}
+     * and &le; {@link #maxWritableBytes()}.
+     */
+    public int maxFastWritableBytes() {
+        return writableBytes();
+    }
 
     /**
      * Returns {@code true}
@@ -2445,4 +2453,12 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
 
     @Override
     public abstract ByteBuf touch(Object hint);
+
+    /**
+     * Used internally by {@link AbstractByteBuf#ensureAccessible()} to try to guard
+     * against using the buffer after it was released (best-effort).
+     */
+    boolean isAccessible() {
+        return refCnt() != 0;
+    }
 }
